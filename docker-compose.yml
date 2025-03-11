@@ -1,0 +1,28 @@
+version: '3'
+services:
+  food-storage-app:
+    image: food-storage-app  # Use the image name you built earlier
+    ports:
+      - "4000:3000"  # Map port 3000 inside the container to port 4000 on the host
+    environment:
+      - DB_HOST=db  # Set the DB host to the name of the service ('db' in this case)
+      - DB_PORT=3306  # MySQL default port
+      - DB_USER=root  # DB username (match the username in your NestJS config)
+      - DB_PASSWORD=root  # DB password (match the password in your NestJS config)
+      - DB_NAME=food_storage_db  # The DB name (match this with your NestJS config)
+    depends_on:
+      - db  # Ensure the app waits for the database to start first
+
+  db:
+    image: mysql:5.7  # MySQL image
+    environment:
+      MYSQL_ROOT_PASSWORD: root  # Root password for MySQL
+      MYSQL_DATABASE: food_storage_db  # Create a database called 'food_storage_db'
+    ports:
+      - "3306:3306"  # Expose MySQL port to the host (optional)
+    volumes:
+      - db_data:/var/lib/mysql  # Persist MySQL data in a Docker volume
+
+volumes:
+  db_data:
+    driver: local
