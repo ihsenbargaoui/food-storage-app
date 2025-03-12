@@ -4,16 +4,13 @@ pipeline {
     environment {
         IMAGE_NAME = "food-storage-app"
         REGISTRY = "docker.io"
-        DOCKER_CREDENTIALS = "docker-hub-credentials" // Remplacez par votre ID de credentials Docker Hub
-        K8S_CLUSTER_NAME = "votre-cluster-k8s" // Nom de votre cluster Kubernetes
-        K8S_NAMESPACE = "default" // Remplacez par le namespace approprié si nécessaire
-        KUBECONFIG_CREDENTIALS = "kubeconfig-credentials" // Remplacez par vos credentials Kubernetes
+        DOCKER_CREDENTIALS = "docker-hub-credentials" // Replace with your Jenkins Docker credentials ID
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout le dépôt
+                // Checkout the repository
                 git branch: 'main', url: 'https://github.com/your-username/food-storage-app.git'
             }
         }
@@ -21,7 +18,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Installe les dépendances sur l'agent
+                    // Install dependencies on the agent
                     sh 'npm install'
                 }
             }
@@ -30,7 +27,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Build de l'application NestJS
+                    // Build the NestJS application
                     sh 'npm run build'
                 }
             }
@@ -39,7 +36,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    // Build de l'image Docker
+                    // Build Docker image
                     sh 'docker build -t $REGISTRY/$IMAGE_NAME .'
                 }
             }
@@ -48,31 +45,32 @@ pipeline {
         stage('Docker Push') {
             steps {
                 script {
-                    // Connexion au registre Docker
+                    // Login to Docker registry
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh 'echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin'
                     }
 
-                    // Push de l'image Docker vers le registre
+                    // Push Docker image to the registry
                     sh 'docker push $REGISTRY/$IMAGE_NAME'
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to Server') {
             steps {
                 script {
-                    // Configuration pour Kubernetes (assurez-vous que kubectl est configuré)
-                    withCredentials([file(credentialsId: KUBECONFIG_CREDENTIALS, variable: 'KUBECONFIG')]) {
-                        sh 'export KUBECONFIG=$KUBECONFIG' // Configure kubectl avec le fichier kubeconfig
+                    // Deploy to server using SSH or other deployment methods
+                    // This step assumes you have SSH setup for your server
+                    sshagent(['your-ssh-credentials-id']) {
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no your-user@your-server-ip <<EOF
+                                docker pull $REGISTRY/$IMAGE_NAME
+                                docker stop food-storage-app || true
+                                docker rm food-storage-app || true
+                                docker run -d -p 3000:3000 --name food-storage-app $REGISTRY/$IMAGE_NAME
+                            EOF
+                        '''
                     }
-
-                    // Mettre à jour l'image dans Kubernetes
-                    sh """
-                        kubectl config use-context $K8S_CLUSTER_NAME
-                        kubectl set image deployment/food-storage-app food-storage-app=$REGISTRY/$IMAGE_NAME:latest -n $K8S_NAMESPACE
-                        kubectl rollout status deployment/food-storage-app -n $K8S_NAMESPACE
-                    """
                 }
             }
         }
@@ -80,7 +78,7 @@ pipeline {
 
     post {
         always {
-            // Nettoyage des ressources si nécessaire
+            // Clean up any resources if needed
             cleanWs()
         }
     }
