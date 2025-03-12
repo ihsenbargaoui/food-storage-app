@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "food-storage-app"
         REGISTRY = "docker.io"
         DOCKER_CREDENTIALS = "docker-hub-credentials" // Replace with your Jenkins Docker credentials ID
-        GIT_CREDENTIALS = '59b669ee-adbb-44c8-b6e0-dacdf9c14c4f' // Replace with your Git credentials ID
+        GIT_CREDENTIALS = "github-credentials" // Replace with your Git credentials ID
     }
 
     stages {
