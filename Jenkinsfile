@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -6,13 +5,16 @@ pipeline {
         IMAGE_NAME = "food-storage-app"
         REGISTRY = "docker.io"
         DOCKER_CREDENTIALS = "docker-hub-credentials" // Replace with your Jenkins Docker credentials ID
+        GIT_CREDENTIALS = '59b669ee-adbb-44c8-b6e0-dacdf9c14c4f' // Replace with your Git credentials ID
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the repository
-                git branch: 'main', url: 'https://github.com/your-username/food-storage-app.git'
+                // Checkout the repository with credentials
+                git branch: 'main', 
+                    url: 'https://github.com/ihsenbargaoui/food-storage-app.git',
+                    credentialsId: GIT_CREDENTIALS // Utilise l'ID des credentials pour Git
             }
         }
 
@@ -61,7 +63,6 @@ pipeline {
             steps {
                 script {
                     // Deploy to server using SSH or other deployment methods
-                    // This step assumes you have SSH setup for your server
                     sshagent(['your-ssh-credentials-id']) {
                         sh '''
                             ssh -o StrictHostKeyChecking=no your-user@your-server-ip <<EOF
@@ -84,4 +85,3 @@ pipeline {
         }
     }
 }
-
